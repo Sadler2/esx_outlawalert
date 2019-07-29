@@ -158,6 +158,31 @@ AddEventHandler('esx_outlawalert:combatInProgress', function(targetCoords)
 	end
 end)
 
+RegisterNetEvent('esx_outlawalert:opencarryInProgress')
+AddEventHandler('esx_outlawalert:opencarryInProgress', function(targetCoords)
+	if isPlayerWhitelisted and Config.MeleeAlert then
+		local alpha = 150
+		local meleeBlip = AddBlipForRadius(targetCoords.x, targetCoords.y, targetCoords.z, Config.BlipMeleeRadius)
+
+		SetBlipHighDetail(meleeBlip, true)
+		SetBlipColour(meleeBlip, 5)
+		SetBlipAlpha(meleeBlip, alpha)
+		SetBlipAsShortRange(meleeBlip, true)
+
+		while alpha ~= 0 do
+			Citizen.Wait(Config.BlipMeleeTime * 0.5)
+			alpha = alpha - 1
+			SetBlipAlpha(meleeBlip, alpha)
+
+			if alpha == 0 then
+				RemoveBlip(meleeBlip)
+				return
+			end
+		end
+	end
+end)
+
+
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(2000)
@@ -187,49 +212,132 @@ Citizen.CreateThread(function()
 
 				ESX.TriggerServerCallback('esx_outlawalert:isVehicleOwner', function(owner)
 					if not owner then
-
 						local vehicleLabel = GetDisplayNameFromVehicleModel(GetEntityModel(vehicle))
 						vehicleLabel = GetLabelText(vehicleLabel)
 
-						DecorSetInt(playerPed, 'isOutlaw', 2)
+						local witness = getWitness(60,10)
+						if witness then
+							DecorSetInt(playerPed, 'isOutlaw', 2)
 
-						TriggerServerEvent('esx_outlawalert:carJackInProgress', {
-							x = ESX.Math.Round(playerCoords.x, 1),
-							y = ESX.Math.Round(playerCoords.y, 1),
-							z = ESX.Math.Round(playerCoords.z, 1)
-						}, streetName, vehicleLabel, playerGender)
+							if exports.esx_skin["getSkinDescription"] ~= nil then
+								TriggerEvent('skinchanger:getSkin', function(skin)
+									local desc = exports.esx_skin:getSkinDescription(skin)
+									local descText = exports.esx_skin:skinDescriptionToText(desc)
+
+									TriggerServerEvent('esx_outlawalert:carJackInProgress', {
+										x = ESX.Math.Round(playerCoords.x, 1),
+										y = ESX.Math.Round(playerCoords.y, 1),
+										z = ESX.Math.Round(playerCoords.z, 1)
+									}, streetName, vehicleLabel, playerGender, descText)
+								end)
+							else
+								TriggerServerEvent('esx_outlawalert:carJackInProgress', {
+									x = ESX.Math.Round(playerCoords.x, 1),
+									y = ESX.Math.Round(playerCoords.y, 1),
+									z = ESX.Math.Round(playerCoords.z, 1)
+								}, streetName, vehicleLabel, playerGender, nil)
+							end
+						end
 					end
 				end, plate)
 			end
 
-		elseif IsPedInMeleeCombat(playerPed) and Config.MeleeAlert then
+		elseif IsPedInMeleeCombat(playerPed) and GetTimeSincePlayerHitPed(playerPed) < 1000 and Config.MeleeAlert then
 
 			Citizen.Wait(3000)
+			local witness = getWitness(10,3)
 
-			if (isPlayerWhitelisted and Config.ShowCopsMisbehave) or not isPlayerWhitelisted then
-				DecorSetInt(playerPed, 'isOutlaw', 2)
+			if witness and (isPlayerWhitelisted and Config.ShowCopsMisbehave) or not isPlayerWhitelisted then
 
-				TriggerServerEvent('esx_outlawalert:combatInProgress', {
-					x = ESX.Math.Round(playerCoords.x, 1),
-					y = ESX.Math.Round(playerCoords.y, 1),
-					z = ESX.Math.Round(playerCoords.z, 1)
-				}, streetName, playerGender)
+				if exports.esx_skin["getSkinDescription"] ~= nil then
+					TriggerEvent('skinchanger:getSkin', function(skin)
+						local desc = exports.esx_skin:getSkinDescription(skin)
+						local descText = exports.esx_skin:skinDescriptionToText(desc)
+
+						DecorSetInt(playerPed, 'isOutlaw', 2)
+
+						TriggerServerEvent('esx_outlawalert:combatInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, descText)
+					end)
+				else
+						TriggerServerEvent('esx_outlawalert:combatInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, nil)
+				end
+
 			end
 
-		elseif IsPedShooting(playerPed) and not IsPedCurrentWeaponSilenced(playerPed) and Config.GunshotAlert then
+		elseif IsPedShooting(playerPed) and Config.GunshotAlert then
 
-			Citizen.Wait(3000)
+			Citizen.Wait(10000)
+			local hearDistance = 60
+			if IsPedCurrentWeaponSilenced(playerPed) then hearDistance = 10 end -- does not actually work, because IsPedShooting already skips silencers at least for pistols
+			local witness = getWitness(30,hearDistance)
 
-			if (isPlayerWhitelisted and Config.ShowCopsMisbehave) or not isPlayerWhitelisted then
-				DecorSetInt(playerPed, 'isOutlaw', 2)
+			if witness and (isPlayerWhitelisted and Config.ShowCopsMisbehave) or not isPlayerWhitelisted then
 
-				TriggerServerEvent('esx_outlawalert:gunshotInProgress', {
-					x = ESX.Math.Round(playerCoords.x, 1),
-					y = ESX.Math.Round(playerCoords.y, 1),
-					z = ESX.Math.Round(playerCoords.z, 1)
-				}, streetName, playerGender)
+				if exports.esx_skin["getSkinDescription"] ~= nil then
+					TriggerEvent('skinchanger:getSkin', function(skin)
+						local desc = exports.esx_skin:getSkinDescription(skin)
+						local descText = exports.esx_skin:skinDescriptionToText(desc)
+						DecorSetInt(playerPed, 'isOutlaw', 2)
+
+						TriggerServerEvent('esx_outlawalert:gunshotInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, descText)
+					end)
+				else
+						TriggerServerEvent('esx_outlawalert:gunshotInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, nil)
+				end
 			end
+		end
+	end
+end)
 
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(60000)
+
+		local playerPed = PlayerPedId()
+		local playerCoords = GetEntityCoords(playerPed)
+		local playerVehicle  = GetVehiclePedIsIn(playerPed, false)
+
+		if playerVehicle == 0 and IsPedArmed(playerPed, 6) then
+			local witness = exports.test:getWitness(40,0)
+
+			if witness and (isPlayerWhitelisted and Config.ShowCopsMisbehave) or not isPlayerWhitelisted then
+
+				if exports.esx_skin["getSkinDescription"] ~= nil then
+					TriggerEvent('skinchanger:getSkin', function(skin)
+						local desc = exports.esx_skin:getSkinDescription(skin)
+						local descText = exports.esx_skin:skinDescriptionToText(desc)
+						DecorSetInt(playerPed, 'isOutlaw', 2)
+
+						TriggerServerEvent('esx_outlawalert:opencarryInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, descText)
+					end)
+				else
+						TriggerServerEvent('esx_outlawalert:opencarryInProgress', {
+							x = ESX.Math.Round(playerCoords.x, 1),
+							y = ESX.Math.Round(playerCoords.y, 1),
+							z = ESX.Math.Round(playerCoords.z, 1)
+						}, streetName, playerGender, nil)
+				end
+			end
 		end
 	end
 end)

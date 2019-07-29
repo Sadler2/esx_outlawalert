@@ -1,4 +1,5 @@
 # esx_outlawalert
+# DRAFT fork from [original esx_outlawalert](https://github.com/ESX-PUBLIC/esx_outlawalert), use at your own risk!
 
 Outlaw Alert is an resource that detects if the player either steals an vehicle, fires a weapon or if the player is fighting another player / ped.
 

@@ -21,6 +21,7 @@ client_scripts {
 	'locales/es.lua',
 	'locales/ru.lua',
 	'config.lua',
+	'client/witness.lua',
 	'client/main.lua'
 }
 
