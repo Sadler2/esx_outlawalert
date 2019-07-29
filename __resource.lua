@@ -10,6 +10,7 @@ server_scripts {
 	'locales/fr.lua',
 	'locales/en.lua',
 	'locales/es.lua',
+	'locales/ru.lua',
 	'config.lua',
 	'server/main.lua'
 }
@@ -18,6 +19,13 @@ client_scripts {
 	'locales/fr.lua',
 	'locales/en.lua',
 	'locales/es.lua',
+	'locales/ru.lua',
 	'config.lua',
 	'client/main.lua'
+}
+
+dependencies {
+	'es_extended',
+	'skinchanger',
+	'esx_skin'
 }

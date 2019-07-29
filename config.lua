@@ -1,6 +1,6 @@
 Config = {}
 
-Config.Locale = 'fr'
+Config.Locale = 'ru'
 
 -- Set the time (in minutes) during the player is outlaw
 Config.Timer = 1
